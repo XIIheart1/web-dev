@@ -164,6 +164,35 @@
   animation: staggerIn 0.6s ease-out forwards;
 }
 
+/* Animation Delays */
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+.animation-delay-500 {
+  animation-delay: 500ms;
+}
+
+.animation-delay-600 {
+  animation-delay: 600ms;
+}
+
 /* Hover Effects */
 .hover-glow:hover {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
@@ -171,6 +200,16 @@
 
 .hover-lift:hover {
   transform: translateY(-5px);
+}
+
+/* Navigation Link Hover Effect */
+.nav-link {
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #60a5fa;
+  transform: translateY(-1px);
 }
 
 /* Scroll Animations */

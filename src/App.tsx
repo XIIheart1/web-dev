@@ -1,39 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ShoppingBag, User, Search, Star, Truck, Shield, ArrowRight, Instagram, Twitter, Facebook, Shirt, Package, Image, Mouse } from 'lucide-react';
-import LimitedEditionsPage from './components/LimitedEditionsPage';
-import CollaborationsPage from './components/CollaborationsPage';
-import SearchModal from './components/SearchModal';
-import ProductPage from './components/ProductPage';
+import { 
+  Menu, 
+  X, 
+  ShoppingCart, 
+  Heart, 
+  User, 
+  Search, 
+  Star, 
+  Package, 
+  Shirt, 
+  Image, 
+  Mouse, 
+  Clock, 
+  Zap, 
+  Crown,
+  Award,
+  Filter,
+  Grid,
+  List
+} from 'lucide-react';
 import AuthModal from './components/AuthModal';
 import CartModal from './components/CartModal';
 import CheckoutPage from './components/CheckoutPage';
 import OrderConfirmationPage from './components/OrderConfirmationPage';
-import { useCart } from './hooks/useCart';
+import ProductPage from './components/ProductPage';
+import LimitedEditionsPage from './components/LimitedEditionsPage';
+import CollaborationsPage from './components/CollaborationsPage';
+import SearchModal from './components/SearchModal';
 import { useAuth } from './hooks/useAuth';
+import { useCart } from './hooks/useCart';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [orderData, setOrderData] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
-  const [visibleSections, setVisibleSections] = useState(new Set());
-  const [timeLeft, setTimeLeft] = useState({
-    days: 7,
-    hours: 12,
-    minutes: 34,
-    seconds: 56
-  });
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [animatedElements, setAnimatedElements] = useState(new Set());
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [productFilter, setProductFilter] = useState('all'); // 'all', 'limited', 'collaborations'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
-  const { cartItems, addToCart, addToWishlist, getCartItemCount, getCartTotal, updateQuantity, removeFromCart } = useCart();
-  const { user, login, signup, logout, checkAuth, isAuthenticated } = useAuth();
+  const { user, login, signup, logout, checkAuth } = useAuth();
+  const { cartItems, addToCart, removeFromCart, updateQuantity, addToWishlist, getCartTotal, getCartItemCount } = useCart();
 
-  // Loading animation
+  // Loading effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -41,47 +57,12 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Intersection Observer for scroll animations
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVisibleSections(prev => new Set([...prev, entry.target.id]));
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    const sections = document.querySelectorAll('[data-animate]');
-    sections.forEach((section) => observer.observe(section));
-
-    return () => observer.disconnect();
-  }, [currentPage]);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        } else if (prev.days > 0) {
-          return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-        }
-        return prev;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
+  // Check authentication on mount
   useEffect(() => {
     checkAuth();
   }, []);
 
+  // Scroll effect for navbar
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -90,145 +71,135 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-    setIsMenuOpen(false);
-  };
-
-  // Loading Screen
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-blue-600/20 rounded-full animate-spin border-t-blue-600 mb-8"></div>
-            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent rounded-full animate-ping border-t-blue-400"></div>
-          </div>
-          <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent animate-pulse">
-            Lowkey! Otaku
-          </h1>
-          <div className="flex items-center justify-center gap-1">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
-        </div>
-      </div>
+  // Intersection Observer for animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setAnimatedElements(prev => new Set([...prev, entry.target.id]));
+          }
+        });
+      },
+      { threshold: 0.1 }
     );
-  }
-  const categories = [
-    { id: 'all', name: 'All Products', icon: Package },
-    { id: 'tees', name: 'Tees', icon: Shirt },
-    { id: 'hoodies', name: 'Hoodies', icon: Package },
-    { id: 'posters', name: 'Posters', icon: Image },
-    { id: 'mousepads', name: 'Mousepads', icon: Mouse }
-  ];
+
+    const elements = document.querySelectorAll('[data-animate]');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [currentPage]);
 
   const products = [
-    { id: "1", name: "Anime Hero Tee", price: "R350", category: "tees", anime: "Attack on Titan" },
-    { id: "2", name: "Cozy Otaku Hoodie", price: "R550", category: "hoodies", anime: "Demon Slayer" },
-    { id: "3", name: "Epic Battle Poster", price: "R200", category: "posters", anime: "Naruto" },
-    { id: "4", name: "Gaming Mousepad", price: "R420", category: "mousepads", anime: "One Piece" },
-    { id: "5", name: "Kawaii Cat Tee", price: "R350", category: "tees", anime: "Studio Ghibli" },
-    { id: "6", name: "Dragon Hoodie", price: "R550", category: "hoodies", anime: "Dragon Ball Z" },
-    { id: "7", name: "Minimalist Poster", price: "R200", category: "posters", anime: "Death Note" },
-    { id: "8", name: "RGB Mousepad", price: "R420", category: "mousepads", anime: "Tokyo Ghoul" },
-    { id: "9", name: "Vintage Anime Tee", price: "R350", category: "tees", anime: "Cowboy Bebop" }
+    // Regular products
+    { id: "1", name: "Naruto Hokage Hoodie", price: "R650", category: "hoodies", anime: "Naruto", type: "regular" },
+    { id: "2", name: "Attack on Titan Scout Tee", price: "R350", category: "tees", anime: "Attack on Titan", type: "regular" },
+    { id: "3", name: "Dragon Ball Z Poster", price: "R200", category: "posters", anime: "Dragon Ball Z", type: "regular" },
+    { id: "4", name: "One Piece Straw Hat Mousepad", price: "R400", category: "mousepads", anime: "One Piece", type: "regular" },
+    { id: "5", name: "Demon Slayer Tanjiro Hoodie", price: "R700", category: "hoodies", anime: "Demon Slayer", type: "regular" },
+    { id: "6", name: "My Hero Academia Tee", price: "R380", category: "tees", anime: "My Hero Academia", type: "regular" },
+    { id: "7", name: "Studio Ghibli Totoro Poster", price: "R250", category: "posters", anime: "Studio Ghibli", type: "regular" },
+    { id: "8", name: "Jujutsu Kaisen Gaming Mousepad", price: "R450", category: "mousepads", anime: "Jujutsu Kaisen", type: "regular" },
+    
+    // Limited Edition products
+    { id: "l1", name: "Golden Saiyan Hoodie", price: "R800", stock: "3/50", anime: "Dragon Ball Z", rarity: "Ultra Rare", category: "hoodies", type: "limited", description: "Ultra-rare limited edition hoodie featuring Goku's legendary Super Saiyan transformation. Premium gold foil accents and exclusive embroidery make this a true collector's piece." },
+    { id: "l2", name: "Akatsuki Cloud Tee", price: "R500", stock: "12/100", anime: "Naruto", rarity: "Rare", category: "tees", type: "limited", description: "Rare design featuring the iconic Akatsuki cloud pattern. High-quality print with fade-resistant inks on premium cotton blend." },
+    { id: "l3", name: "Titan Shift Poster", price: "R300", stock: "7/25", anime: "Attack on Titan", rarity: "Limited", category: "posters", type: "limited", description: "Limited edition poster showcasing the epic titan transformation scenes. Museum-quality print on archival paper." },
+    { id: "l4", name: "Demon Slayer Mousepad", price: "R500", stock: "18/75", anime: "Demon Slayer", rarity: "Special", category: "mousepads", type: "limited", description: "Special edition mousepad featuring Tanjiro's breathing techniques. Anti-slip base and smooth surface for optimal gaming." },
+    
+    // Collaboration products
+    { id: "c1", name: "Craft Singh x Lowkey Dragon Hoodie", price: "R750", anime: "Dragon Ball Z", type: "collaboration", category: "hoodies", partner: "Craft Singh", description: "Exclusive designer collaboration featuring premium streetwear aesthetics with Dragon Ball Z elements. Limited edition with custom embroidery." },
+    { id: "c2", name: "Urban Saiyan Tee", price: "R550", anime: "Dragon Ball Z", type: "collaboration", category: "tees", partner: "Craft Singh", description: "High-end streetwear tee with minimalist Saiyan design. Premium cotton blend with subtle metallic accents." },
+    { id: "c6", name: "Exactly x Lowkey Naruto Tee", price: "R520", anime: "Naruto", type: "collaboration", category: "tees", partner: "Exactly Clothing", description: "Perfectly tailored tee with precise measurements and premium fabric. Features subtle Naruto-inspired design elements." },
+    { id: "c7", name: "Hokage Precision Hoodie", price: "R780", anime: "Naruto", type: "collaboration", category: "hoodies", partner: "Exactly Clothing", description: "Meticulously crafted hoodie with perfect fit guarantee. Premium materials with Hokage-inspired design details." }
   ];
-
-  // Combine all products for search
-  const limitedProducts = [
-    { id: "l1", name: "Golden Saiyan Hoodie", price: "R800", stock: "3/50", anime: "Dragon Ball Z", rarity: "Ultra Rare", category: "hoodies", description: "Ultra-rare limited edition hoodie featuring Goku's legendary Super Saiyan transformation." },
-    { id: "l2", name: "Akatsuki Cloud Tee", price: "R500", stock: "12/100", anime: "Naruto", rarity: "Rare", category: "tees", description: "Rare design featuring the iconic Akatsuki cloud pattern." },
-    { id: "l3", name: "Titan Shift Poster", price: "R300", stock: "7/25", anime: "Attack on Titan", rarity: "Limited", category: "posters", description: "Limited edition poster showcasing the epic titan transformation scenes." },
-    { id: "l4", name: "Demon Slayer Mousepad", price: "R500", stock: "18/75", anime: "Demon Slayer", rarity: "Special", category: "mousepads", description: "Special edition mousepad featuring Tanjiro's breathing techniques." },
-    { id: "l5", name: "Studio Ghibli Hoodie", price: "R750", stock: "5/30", anime: "Studio Ghibli", rarity: "Collector", category: "hoodies", description: "Collector's edition hoodie celebrating the magical world of Studio Ghibli." },
-    { id: "l6", name: "One Piece Treasure Tee", price: "R450", stock: "23/150", anime: "One Piece", rarity: "Limited", category: "tees", description: "Limited edition tee featuring the Straw Hat Pirates' treasure hunt." }
-  ];
-
-  const collabProducts = [
-    { id: "c1", name: "MAPPA x Lowkey Eren Hoodie", price: "R550", anime: "Attack on Titan", type: "Official Collab", category: "hoodies", description: "Official collaboration with Studio MAPPA featuring Eren's final form." },
-    { id: "c2", name: "Toei x Lowkey Luffy Tee", price: "R420", anime: "One Piece", type: "Movie Exclusive", category: "tees", description: "Exclusive Film Red merchandise featuring Luffy's Gear 5 form." },
-    { id: "c3", name: "WIT Studio Levi Poster", price: "R260", anime: "Attack on Titan", type: "Artist Series", category: "posters", description: "Artist series poster celebrating WIT Studio's iconic Levi scenes." }
-  ];
-
-  const allProducts = [...products, ...limitedProducts, ...collabProducts];
-
-  const filteredProducts = activeCategory === 'all' 
-    ? products 
-    : products.filter(product => product.category === activeCategory);
-
-  const handleProductSelect = (product) => {
-    setSelectedProduct(product);
-    setCurrentPage('product');
-  };
-
-  const handleAddToCart = (product, size, quantity) => {
-    addToCart(product, size, quantity);
-    // Show success message or notification here
-    alert(`Added ${quantity}x ${product.name} (${size}) to cart!`);
-  };
-
-  const handleAddToWishlist = (product) => {
-    addToWishlist(product);
-    alert(`Added ${product.name} to wishlist!`);
-  };
 
   const handleLogin = async (email: string, password: string) => {
     const result = await login(email, password);
     if (result.success) {
-      setIsAuthOpen(false);
-      alert('Welcome back!');
-    } else {
-      alert('Login failed. Please try again.');
+      setIsAuthModalOpen(false);
     }
   };
 
   const handleSignup = async (name: string, email: string, password: string) => {
     const result = await signup(name, email, password);
     if (result.success) {
-      setIsAuthOpen(false);
-      alert('Account created successfully!');
-    } else {
-      alert('Signup failed. Please try again.');
+      setIsAuthModalOpen(false);
     }
+  };
+
+  const handleAddToCart = (product: any, size: string, quantity: number) => {
+    addToCart(product, size, quantity);
+    alert(`Added ${quantity}x ${product.name} (${size}) to cart!`);
+  };
+
+  const handleAddToWishlist = (product: any) => {
+    addToWishlist(product);
+    alert(`Added ${product.name} to wishlist!`);
   };
 
   const handleCheckout = () => {
-    if (!isAuthenticated) {
-      setIsCartOpen(false);
-      setIsAuthOpen(true);
-      return;
-    }
-    setIsCartOpen(false);
+    setIsCartModalOpen(false);
     setCurrentPage('checkout');
   };
 
-  const handleOrderComplete = (orderInfo: any) => {
-    setOrderData(orderInfo);
+  const handleOrderComplete = (data: any) => {
+    setOrderData(data);
     setCurrentPage('order-confirmation');
     // Clear cart after successful order
-    // You might want to add a clearCart function to useCart hook
+    cartItems.forEach(item => removeFromCart(item.id, item.size));
   };
 
-  if (currentPage === 'limited') {
+  const getIcon = (category: string) => {
+    switch (category) {
+      case 'tees': return Shirt;
+      case 'hoodies': return Package;
+      case 'posters': return Image;
+      case 'mousepads': return Mouse;
+      default: return Star;
+    }
+  };
+
+  const filteredProducts = products.filter(product => {
+    const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
+    const typeMatch = productFilter === 'all' || product.type === productFilter;
+    return categoryMatch && typeMatch;
+  });
+
+  const displayedProducts = showAllProducts ? filteredProducts : filteredProducts.slice(0, 8);
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mb-6"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-600 rounded-full animate-spin animation-delay-150"></div>
+          </div>
+          <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent animate-pulse">
+            Lowkey! Otaku
+          </h2>
+          <div className="flex justify-center space-x-1">
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce animation-delay-100"></div>
+            <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce animation-delay-200"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentPage === 'limited-editions') {
     return <LimitedEditionsPage onBack={() => setCurrentPage('home')} />;
   }
 
-  if (currentPage === 'collabs') {
+  if (currentPage === 'collaborations') {
     return <CollaborationsPage onBack={() => setCurrentPage('home')} />;
   }
 
   if (currentPage === 'checkout') {
     return (
-      <CheckoutPage 
+      <CheckoutPage
         onBack={() => setCurrentPage('home')}
         cartItems={cartItems}
         cartTotal={getCartTotal()}
@@ -237,26 +208,20 @@ function App() {
     );
   }
 
-  if (currentPage === 'order-confirmation' && orderData) {
+  if (currentPage === 'order-confirmation') {
     return (
-      <OrderConfirmationPage 
+      <OrderConfirmationPage
         orderData={orderData}
-        onBackToHome={() => {
-          setCurrentPage('home');
-          setOrderData(null);
-        }}
+        onBackToHome={() => setCurrentPage('home')}
       />
     );
   }
 
-  if (currentPage === 'product' && selectedProduct) {
+  if (selectedProduct) {
     return (
-      <ProductPage 
+      <ProductPage
         product={selectedProduct}
-        onBack={() => {
-          setCurrentPage('home');
-          setSelectedProduct(null);
-        }}
+        onBack={() => setSelectedProduct(null)}
         onAddToCart={handleAddToCart}
         onAddToWishlist={handleAddToWishlist}
       />
@@ -265,182 +230,741 @@ function App() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Floating Navigation */}
-      <nav className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-700 ease-out ${
-        isScrolled ? 'scale-95 translate-y-1' : 'scale-100 translate-y-0'
+      {/* Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
+        isScrolled 
+          ? 'bg-black/95 backdrop-blur-xl border-b border-white/10 py-4 shadow-2xl' 
+          : 'bg-transparent py-6'
       }`}>
-        <div className="bg-black/80 backdrop-blur-xl rounded-full px-8 py-3 shadow-2xl border border-white/10 hover:shadow-blue-500/20 transition-all duration-500 hover:border-blue-500/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex-shrink-0 mr-8">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300 cursor-pointer">
-                Lowkey! Otaku
-              </h1>
+            <div className={`text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent transition-all duration-300 ${
+              isScrolled ? 'scale-90' : 'scale-100'
+            }`}>
+              Lowkey! Otaku
+            </div>
+            
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="#home" className="nav-link relative group">
+                Home
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
+              </a>
+              <a href="#products" className="nav-link relative group">
+                Products
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
+              </a>
+              <a href="#about" className="nav-link relative group">
+                About
+                <span className="absolute -bottom-1 left-0 w-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
+              </a>
+              <a href="#contact" className="nav-link relative group">
+                Contact
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
+              </a>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:block">
-              <div className="flex items-center space-x-6">
-                <button onClick={() => scrollToSection('hero')} className="text-white/80 hover:text-blue-400 transition-all duration-300 text-sm font-medium hover:scale-105 relative group">
-                  Home
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
-                </button>
-                <button onClick={() => scrollToSection('categories')} className="text-white/80 hover:text-blue-400 transition-all duration-300 text-sm font-medium hover:scale-105 relative group">
-                  Categories
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
-                </button>
-                <button onClick={() => scrollToSection('products')} className="text-white/80 hover:text-blue-400 transition-all duration-300 text-sm font-medium hover:scale-105 relative group">
-                  Products
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
-                </button>
-                <button onClick={() => scrollToSection('limited')} className="text-white/80 hover:text-blue-400 transition-all duration-300 text-sm font-medium hover:scale-105 relative group">
-                  Limited
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
-                </button>
-                <button onClick={() => scrollToSection('collabs')} className="text-white/80 hover:text-blue-400 transition-all duration-300 text-sm font-medium hover:scale-105 relative group">
-                  Collabs
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
-                </button>
-                <button onClick={() => scrollToSection('about')} className="text-white/80 hover:text-blue-400 transition-all duration-300 text-sm font-medium hover:scale-105 relative group">
-                  About
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
-                </button>
-                <button onClick={() => scrollToSection('contact')} className="text-white/80 hover:text-blue-400 transition-all duration-300 text-sm font-medium hover:scale-105 relative group">
-                  Contact
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
-                </button>
-              </div>
-            </div>
-
-            {/* Desktop Icons */}
-            <div className="hidden md:flex items-center space-x-4 ml-8">
-              <Search 
-                className="h-5 w-5 text-white/80 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" 
-                onClick={() => setIsSearchOpen(true)}
-              />
-              <div className="relative">
-                {isAuthenticated ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-white/80 animate-fade-in">Hi, {user?.name}</span>
-                    <button
-                      onClick={logout}
-                      className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-all duration-300 hover:scale-105"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <User 
-                    className="h-5 w-5 text-white/80 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" 
-                    onClick={() => setIsAuthOpen(true)}
-                  />
-                )}
-              </div>
-              <div className="relative">
-                <ShoppingBag 
-                  className="h-5 w-5 text-white/80 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" 
-                  onClick={() => setIsCartOpen(true)}
-                />
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setIsSearchModalOpen(true)}
+                className="p-2 hover:bg-white/10 rounded-full transition-all duration-300 hover:scale-110"
+              >
+                <Search className="h-5 w-5 transition-transform duration-300 hover:rotate-12" />
+              </button>
+              <button className="p-2 hover:bg-white/10 rounded-full transition-all duration-300 hover:scale-110">
+                <Heart className="h-5 w-5 transition-transform duration-300 hover:scale-110" />
+              </button>
+              <button 
+                onClick={() => setIsCartModalOpen(true)}
+                className="relative p-2 hover:bg-white/10 rounded-full transition-all duration-300 hover:scale-110"
+              >
+                <ShoppingCart className="h-5 w-5 transition-transform duration-300 hover:rotate-12" />
                 {getCartItemCount() > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-bounce">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-bounce">
                     {getCartItemCount()}
                   </span>
                 )}
-              </div>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={toggleMenu}
-                className="inline-flex items-center justify-center p-2 rounded-full text-white/80 hover:text-blue-400 transition-all duration-300 hover:scale-110 hover:rotate-180"
+              </button>
+              <button 
+                onClick={() => setIsAuthModalOpen(true)}
+                className="p-2 hover:bg-white/10 rounded-full transition-all duration-300 hover:scale-110"
               >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                <User className="h-5 w-5 transition-transform duration-300 hover:rotate-12" />
+              </button>
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 hover:bg-white/10 rounded-full transition-all duration-300"
+              >
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 mt-2 animate-slide-down">
-            <div className="bg-black/90 backdrop-blur-xl rounded-2xl mx-4 p-4 shadow-2xl border border-white/10 animate-fade-in">
-              <div className="space-y-2">
-                <button onClick={() => scrollToSection('hero')} className="block w-full text-left px-4 py-3 text-white/80 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all duration-300 hover:translate-x-2">Home</button>
-                <button onClick={() => scrollToSection('categories')} className="block w-full text-left px-4 py-3 text-white/80 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all duration-300 hover:translate-x-2">Categories</button>
-                <button onClick={() => scrollToSection('products')} className="block w-full text-left px-4 py-3 text-white/80 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all duration-300 hover:translate-x-2">Products</button>
-                <button onClick={() => scrollToSection('limited')} className="block w-full text-left px-4 py-3 text-white/80 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all duration-300 hover:translate-x-2">Limited</button>
-                <button onClick={() => scrollToSection('collabs')} className="block w-full text-left px-4 py-3 text-white/80 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all duration-300 hover:translate-x-2">Collabs</button>
-                <button onClick={() => scrollToSection('about')} className="block w-full text-left px-4 py-3 text-white/80 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all duration-300 hover:translate-x-2">About</button>
-                <button onClick={() => scrollToSection('contact')} className="block w-full text-left px-4 py-3 text-white/80 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all duration-300 hover:translate-x-2">Contact</button>
-              </div>
-              <div className="flex justify-center space-x-6 mt-4 pt-4 border-t border-white/10">
-                <Search 
-                  className="h-5 w-5 text-white/80 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" 
-                  onClick={() => {
-                    setIsSearchOpen(true);
-                    setIsMenuOpen(false);
-                  }}
-                />
-                {isAuthenticated ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-white/80 animate-fade-in">Hi, {user?.name}</span>
-                    <button
-                      onClick={logout}
-                      className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-all duration-300 hover:scale-105"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <User 
-                    className="h-5 w-5 text-white/80 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" 
-                    onClick={() => {
-                      setIsAuthOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                  />
-                )}
-                <div className="relative">
-                  <ShoppingBag 
-                    className="h-5 w-5 text-white/80 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" 
-                    onClick={() => {
-                      setIsCartOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                  />
-                  {getCartItemCount() > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-bounce">
-                      {getCartItemCount()}
-                    </span>
-                  )}
-                </div>
-              </div>
+          <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/10 animate-slide-down">
+            <div className="px-4 py-6 space-y-4">
+              <a href="#home" className="block py-2 hover:text-blue-400 transition-colors duration-300 animate-fade-in">Home</a>
+              <a href="#products" className="block py-2 hover:text-blue-400 transition-colors duration-300 animate-fade-in animation-delay-100">Products</a>
+              <a href="#about" className="block py-2 hover:text-blue-400 transition-colors duration-300 animate-fade-in animation-delay-200">About</a>
+              <a href="#contact" className="block py-2 hover:text-blue-400 transition-colors duration-300 animate-fade-in animation-delay-300">Contact</a>
             </div>
           </div>
         )}
       </nav>
 
-      {/* Search Modal */}
-      <SearchModal 
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onProductSelect={handleProductSelect}
-        products={allProducts}
-      />
+      {/* Hero Section */}
+      <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-black"></div>
+          {/* Floating Particles */}
+          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-blue-400 rounded-full animate-float opacity-60"></div>
+          <div className="absolute top-1/3 right-1/3 w-3 h-3 bg-purple-400 rounded-full animate-float-delayed opacity-40"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-1 h-1 bg-pink-400 rounded-full animate-float-slow opacity-80"></div>
+          <div className="absolute top-1/2 right-1/4 w-2 h-2 bg-blue-300 rounded-full animate-float opacity-50"></div>
+          <div className="absolute bottom-1/3 right-1/2 w-3 h-3 bg-purple-300 rounded-full animate-float-delayed opacity-30"></div>
+        </div>
+        
+        <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8">
+          <h1 className="text-6xl md:text-8xl font-bold mb-6 animate-fade-in-up">
+            <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x">
+              Lowkey!
+            </span>
+            <br />
+            <span className="text-white animate-fade-in-up animation-delay-200">Otaku</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto animate-fade-in-up animation-delay-400">
+            Premium anime merchandise for true fans. Express your otaku pride with our exclusive collection of hoodies, tees, posters, and gaming gear.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-600">
+            <button 
+              onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+              className="group bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25"
+            >
+              Shop Now
+              <span className="inline-block ml-2 transition-transform duration-300 group-hover:translate-x-1">→</span>
+            </button>
+            <button 
+              onClick={() => setCurrentPage('limited-editions')}
+              className="group bg-transparent border-2 border-white/20 hover:border-purple-400 text-white hover:text-purple-400 px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+            >
+              Limited Drops
+              <span className="inline-block ml-2 transition-transform duration-300 group-hover:translate-x-1">✨</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
+      {/* Featured Collections */}
+      <section className="py-20 bg-gradient-to-b from-black to-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div 
+            id="featured-title"
+            data-animate
+            className={`text-center mb-16 transition-all duration-800 ${
+              animatedElements.has('featured-title') ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Featured Collections</h2>
+            <p className="text-xl text-gray-400">Discover our most popular anime merchandise</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div 
+              id="limited-card"
+              data-animate
+              className={`group cursor-pointer transition-all duration-800 ${
+                animatedElements.has('limited-card') ? 'animate-fade-in-left' : 'opacity-0 -translate-x-8'
+              }`}
+              onClick={() => setCurrentPage('limited-editions')}
+            >
+              <div className="bg-gradient-to-br from-red-900/30 to-black/80 rounded-lg p-8 border border-red-600/30 group-hover:border-red-400/50 transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-red-500/20">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="bg-red-600/10 rounded-full p-4 group-hover:bg-red-600/20 transition-colors duration-300">
+                    <Clock className="h-8 w-8 text-red-400 group-hover:rotate-12 transition-transform duration-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold group-hover:text-red-400 transition-colors duration-300">Limited Editions</h3>
+                    <p className="text-red-400">Exclusive drops for collectors</p>
+                  </div>
+                </div>
+                <p className="text-gray-300 mb-6">Rare and exclusive anime merchandise with limited quantities. Once they're gone, they're gone forever!</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">15+ exclusive items</span>
+                  <span className="text-red-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">Explore →</span>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              id="collab-card"
+              data-animate
+              className={`group cursor-pointer transition-all duration-800 ${
+                animatedElements.has('collab-card') ? 'animate-fade-in-right' : 'opacity-0 translate-x-8'
+              }`}
+              onClick={() => setCurrentPage('collaborations')}
+            >
+              <div className="bg-gradient-to-br from-purple-900/30 to-black/80 rounded-lg p-8 border border-purple-600/30 group-hover:border-purple-400/50 transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-purple-500/20">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="bg-purple-600/10 rounded-full p-4 group-hover:bg-purple-600/20 transition-colors duration-300">
+                    <Crown className="h-8 w-8 text-purple-400 group-hover:rotate-12 transition-transform duration-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold group-hover:text-purple-400 transition-colors duration-300">Collaborations</h3>
+                    <p className="text-purple-400">Official partnerships</p>
+                  </div>
+                </div>
+                <p className="text-gray-300 mb-6">Exclusive collaborations with top brands and artists. Premium quality meets unique design.</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">4 brand partnerships</span>
+                  <span className="text-purple-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">Explore →</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Products Section */}
+      <section id="products" className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div 
+            id="products-title"
+            data-animate
+            className={`text-center mb-12 transition-all duration-800 ${
+              animatedElements.has('products-title') ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Our Products</h2>
+            <p className="text-xl text-gray-400">Premium anime merchandise crafted with love</p>
+          </div>
+
+          {/* Category Filters */}
+          <div 
+            id="category-filters"
+            data-animate
+            className={`flex flex-wrap justify-center gap-4 mb-8 transition-all duration-800 ${
+              animatedElements.has('category-filters') ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            {['all', 'hoodies', 'tees', 'posters', 'mousepads'].map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${
+                  selectedCategory === category
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                    : 'bg-white/5 text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Product Type Filters (when showing all products) */}
+          {showAllProducts && (
+            <div 
+              id="type-filters"
+              data-animate
+              className={`mb-8 transition-all duration-800 ${
+                animatedElements.has('type-filters') ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <Filter className="h-5 w-5 text-gray-400" />
+                  <span className="text-gray-400 font-medium">Filter by type:</span>
+                  <div className="flex gap-2">
+                    {['all', 'limited', 'collaboration'].map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setProductFilter(filter)}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                          productFilter === filter
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white/5 text-white/80 hover:bg-white/10'
+                        }`}
+                      >
+                        {filter === 'all' ? 'All Products' : 
+                         filter === 'limited' ? 'Limited Edition' : 
+                         'Collaborations'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-lg transition-all duration-300 ${
+                      viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/80 hover:bg-white/10'
+                    }`}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-lg transition-all duration-300 ${
+                      viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/80 hover:bg-white/10'
+                    }`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Products Grid */}
+          <div 
+            id="products-grid"
+            data-animate
+            className={`${
+              viewMode === 'grid' 
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8' 
+                : 'space-y-4'
+            } transition-all duration-800 ${
+              animatedElements.has('products-grid') ? 'animate-stagger-in' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            {displayedProducts.map((product, index) => {
+              const IconComponent = getIcon(product.category);
+              const isLimited = product.type === 'limited';
+              const isCollaboration = product.type === 'collaboration';
+              
+              if (viewMode === 'list') {
+                return (
+                  <div 
+                    key={index} 
+                    className="group cursor-pointer bg-white/5 rounded-lg p-6 border border-white/10 hover:border-blue-400/50 transition-all duration-300 hover:bg-white/10"
+                    onClick={() => setSelectedProduct(product)}
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className="bg-blue-600/10 rounded-lg p-4 group-hover:bg-blue-600/20 transition-colors duration-300">
+                        <IconComponent className="h-8 w-8 text-blue-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="text-xl font-semibold group-hover:text-blue-400 transition-colors duration-300">
+                            {product.name}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            {isLimited && (
+                              <span className="bg-red-600/20 text-red-400 text-xs px-2 py-1 rounded-full font-semibold">
+                                Limited
+                              </span>
+                            )}
+                            {isCollaboration && (
+                              <span className="bg-purple-600/20 text-purple-400 text-xs px-2 py-1 rounded-full font-semibold">
+                                Collab
+                              </span>
+                            )}
+                            <span className="text-2xl font-bold text-blue-400">{product.price}</span>
+                          </div>
+                        </div>
+                        <p className="text-gray-400 mb-2">{product.anime}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full capitalize">
+                            {product.category}
+                          </span>
+                          {isCollaboration && product.partner && (
+                            <span className="text-sm text-purple-400">
+                              with {product.partner}
+                            </span>
+                          )}
+                          {isLimited && product.stock && (
+                            <span className="text-sm text-red-400">
+                              {product.stock} left
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div 
+                  key={index} 
+                  className="group cursor-pointer transform transition-all duration-300 hover:scale-105 animate-fade-in-up"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  onClick={() => setSelectedProduct(product)}
+                >
+                  <div className="bg-black rounded-lg overflow-hidden shadow-2xl group-hover:shadow-blue-500/20 border border-white/10 group-hover:border-blue-400/50 transition-all duration-300 relative">
+                    {/* Product Type Badge */}
+                    <div className="absolute top-4 right-4 z-10">
+                      {isLimited && (
+                        <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                          {product.rarity || 'Limited'}
+                        </span>
+                      )}
+                      {isCollaboration && (
+                        <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                          Collab
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Stock indicator for limited items */}
+                    {isLimited && product.stock && (
+                      <div className="absolute top-4 left-4 z-10">
+                        <span className="bg-black/80 text-red-300 text-xs px-2 py-1 rounded-full font-semibold">
+                          {product.stock} left
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="aspect-w-3 aspect-h-4 bg-gradient-to-br from-blue-900/20 to-black/80 h-80 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="bg-blue-600/10 rounded-full p-8 w-24 h-24 flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600/20 transition-all duration-300 group-hover:scale-110">
+                          <IconComponent className="h-12 w-12 text-blue-400 group-hover:rotate-12 transition-transform duration-300" />
+                        </div>
+                        <p className="text-gray-400 text-sm">{product.anime}</p>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-blue-400 transition-colors duration-300">{product.name}</h3>
+                      <div className="flex justify-between items-center mb-4">
+                        <p className="text-blue-400 text-lg font-bold">{product.price}</p>
+                        <span className="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded-full capitalize">
+                          {product.category}
+                        </span>
+                      </div>
+                      {isCollaboration && product.partner && (
+                        <p className="text-xs text-purple-400 mb-2">with {product.partner}</p>
+                      )}
+                      {isLimited && product.stock && (
+                        <div className="mb-4">
+                          <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div 
+                              className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-300"
+                              style={{ 
+                                width: `${(parseInt(product.stock.split('/')[0]) / parseInt(product.stock.split('/')[1])) * 100}%` 
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProduct(product);
+                        }}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* View More Button */}
+          {!showAllProducts && filteredProducts.length > 8 && (
+            <div 
+              id="view-more-btn"
+              data-animate
+              className={`text-center mt-12 transition-all duration-800 ${
+                animatedElements.has('view-more-btn') ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+              }`}
+            >
+              <button
+                onClick={() => setShowAllProducts(true)}
+                className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25"
+              >
+                View More Products
+                <span className="inline-block ml-2 transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </button>
+            </div>
+          )}
+
+          {/* Show Less Button */}
+          {showAllProducts && (
+            <div className="text-center mt-12">
+              <button
+                onClick={() => {
+                  setShowAllProducts(false);
+                  setProductFilter('all');
+                  document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="group bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                Show Less
+                <span className="inline-block ml-2 transition-transform duration-300 group-hover:translate-y-1">↑</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-20 bg-gradient-to-b from-gray-900 to-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div 
+              id="about-content"
+              data-animate
+              className={`transition-all duration-800 ${
+                animatedElements.has('about-content') ? 'animate-fade-in-left' : 'opacity-0 -translate-x-8'
+              }`}
+            >
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">About Lowkey! Otaku</h2>
+              <p className="text-xl text-gray-300 mb-6">
+                We're passionate anime fans creating premium merchandise for the otaku community. 
+                Every design is crafted with love and attention to detail, celebrating the anime culture we all cherish.
+              </p>
+              <p className="text-lg text-gray-400 mb-8">
+                From exclusive limited drops to official collaborations, we bring you the highest quality 
+                anime merchandise that lets you express your otaku pride in style.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button className="group bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                  Our Story
+                  <span className="inline-block ml-2 transition-transform duration-300 group-hover:translate-x-1">→</span>
+                </button>
+                <button className="group bg-transparent border-2 border-white/20 hover:border-blue-400 text-white hover:text-blue-400 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                  Join Community
+                  <span className="inline-block ml-2 transition-transform duration-300 group-hover:scale-110">👥</span>
+                </button>
+              </div>
+            </div>
+            <div 
+              id="about-visual"
+              data-animate
+              className={`transition-all duration-800 ${
+                animatedElements.has('about-visual') ? 'animate-fade-in-right' : 'opacity-0 translate-x-8'
+              }`}
+            >
+              <div className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-lg p-8 border border-blue-600/30">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="text-center">
+                    <div className="bg-blue-600/10 rounded-full p-6 w-20 h-20 flex items-center justify-center mx-auto mb-4 hover:bg-blue-600/20 transition-colors duration-300 hover:scale-110 transform">
+                      <Package className="h-10 w-10 text-blue-400" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Premium Quality</h3>
+                    <p className="text-sm text-gray-400">High-quality materials and printing</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-purple-600/10 rounded-full p-6 w-20 h-20 flex items-center justify-center mx-auto mb-4 hover:bg-purple-600/20 transition-colors duration-300 hover:scale-110 transform">
+                      <Star className="h-10 w-10 text-purple-400" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Exclusive Designs</h3>
+                    <p className="text-sm text-gray-400">Unique artwork by talented artists</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-green-600/10 rounded-full p-6 w-20 h-20 flex items-center justify-center mx-auto mb-4 hover:bg-green-600/20 transition-colors duration-300 hover:scale-110 transform">
+                      <Zap className="h-10 w-10 text-green-400" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Fast Shipping</h3>
+                    <p className="text-sm text-gray-400">Quick delivery across South Africa</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-red-600/10 rounded-full p-6 w-20 h-20 flex items-center justify-center mx-auto mb-4 hover:bg-red-600/20 transition-colors duration-300 hover:scale-110 transform">
+                      <Heart className="h-10 w-10 text-red-400" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Made with Love</h3>
+                    <p className="text-sm text-gray-400">By otaku, for otaku community</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div 
+            id="contact-title"
+            data-animate
+            className={`text-center mb-16 transition-all duration-800 ${
+              animatedElements.has('contact-title') ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Get In Touch</h2>
+            <p className="text-xl text-gray-400">Have questions? We'd love to hear from you!</p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div 
+              id="contact-info"
+              data-animate
+              className={`transition-all duration-800 ${
+                animatedElements.has('contact-info') ? 'animate-fade-in-left' : 'opacity-0 -translate-x-8'
+              }`}
+            >
+              <h3 className="text-2xl font-bold mb-8">Contact Information</h3>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 group">
+                  <div className="bg-blue-600/10 rounded-full p-3 group-hover:bg-blue-600/20 transition-colors duration-300">
+                    <Package className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Address</h4>
+                    <p className="text-gray-400">54 Black Rhino Street, Mqantsa</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 group">
+                  <div className="bg-green-600/10 rounded-full p-3 group-hover:bg-green-600/20 transition-colors duration-300">
+                    <Package className="h-6 w-6 text-green-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Phone</h4>
+                    <p className="text-gray-400">0684974448</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 group">
+                  <div className="bg-purple-600/10 rounded-full p-3 group-hover:bg-purple-600/20 transition-colors duration-300">
+                    <Package className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Email</h4>
+                    <p className="text-gray-400">garnetlwky@icloud.com</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 group">
+                  <div className="bg-pink-600/10 rounded-full p-3 group-hover:bg-pink-600/20 transition-colors duration-300">
+                    <Package className="h-6 w-6 text-pink-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Instagram</h4>
+                    <a 
+                      href="https://www.instagram.com/lowkey.otaku_/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-pink-400 hover:text-pink-300 transition-colors duration-300"
+                    >
+                      @lowkey.otaku_
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div 
+              id="contact-form"
+              data-animate
+              className={`transition-all duration-800 ${
+                animatedElements.has('contact-form') ? 'animate-fade-in-right' : 'opacity-0 translate-x-8'
+              }`}
+            >
+              <form className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Name</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300"
+                    placeholder="Your name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <input
+                    type="email"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300"
+                    placeholder="your@email.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Message</label>
+                  <textarea
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 resize-none"
+                    placeholder="Your message..."
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25"
+                >
+                  Send Message
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div 
+            id="footer-content"
+            data-animate
+            className={`grid grid-cols-1 md:grid-cols-4 gap-8 transition-all duration-800 ${
+              animatedElements.has('footer-content') ? 'animate-stagger-in' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            <div className="animate-fade-in-up">
+              <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+                Lowkey! Otaku
+              </h3>
+              <p className="text-gray-400 mb-4">Premium anime merchandise for true fans.</p>
+              <div className="flex space-x-4">
+                <a href="https://www.instagram.com/lowkey.otaku_/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-400 transition-all duration-300 hover:scale-110 hover:rotate-12">
+                  <Package className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
+            <div className="animate-fade-in-up animation-delay-100">
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2">
+                <li><a href="#home" className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">Home</a></li>
+                <li><a href="#products" className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">Products</a></li>
+                <li><a href="#about" className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">About</a></li>
+                <li><a href="#contact" className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">Contact</a></li>
+              </ul>
+            </div>
+            <div className="animate-fade-in-up animation-delay-200">
+              <h4 className="font-semibold mb-4">Categories</h4>
+              <ul className="space-y-2">
+                <li><button onClick={() => setSelectedCategory('hoodies')} className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">Hoodies</button></li>
+                <li><button onClick={() => setSelectedCategory('tees')} className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">T-Shirts</button></li>
+                <li><button onClick={() => setSelectedCategory('posters')} className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">Posters</button></li>
+                <li><button onClick={() => setSelectedCategory('mousepads')} className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">Mousepads</button></li>
+              </ul>
+            </div>
+            <div className="animate-fade-in-up animation-delay-300">
+              <h4 className="font-semibold mb-4">Contact</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>54 Black Rhino Street, Mqantsa</li>
+                <li>0684974448</li>
+                <li>garnetlwky@icloud.com</li>
+                <li>
+                  <a 
+                    href="https://www.instagram.com/lowkey.otaku_/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-pink-400 transition-colors duration-300"
+                  >
+                    @lowkey.otaku_
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Lowkey! Otaku. All rights reserved. Artwork by <a href="https://www.instagram.com/garnet_arts._/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Garnet</a></p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modals */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
         onLogin={handleLogin}
         onSignup={handleSignup}
       />
 
-      {/* Cart Modal */}
-      <CartModal 
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
+      <CartModal
+        isOpen={isCartModalOpen}
+        onClose={() => setIsCartModalOpen(false)}
         cartItems={cartItems}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeFromCart}
@@ -448,456 +972,12 @@ function App() {
         cartTotal={getCartTotal()}
       />
 
-      {/* Hero Section */}
-      <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden" data-animate>
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-black/80 z-10"></div>
-        <div className="absolute inset-0 bg-black overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent animate-pulse"></div>
-          {/* Floating particles */}
-          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-blue-400/30 rounded-full animate-float"></div>
-          <div className="absolute top-1/3 right-1/4 w-1 h-1 bg-blue-300/40 rounded-full animate-float-delayed"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-3 h-3 bg-blue-500/20 rounded-full animate-float-slow"></div>
-          <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-blue-400/35 rounded-full animate-float-delayed"></div>
-        </div>
-        
-        <div className="relative z-20 text-center max-w-4xl mx-auto px-4 animate-fade-in-up">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-slide-up">
-            Express Your
-            <span className="block bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent animate-gradient-x">
-              Otaku Pride
-            </span>
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            Premium anime merchandise for the cultured otaku. Tees, hoodies, posters, and more.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-            <button 
-              onClick={() => scrollToSection('products')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2 group"
-            >
-              Shop Now <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
-            <button 
-              onClick={() => scrollToSection('categories')}
-              className="border-2 border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
-            >
-              Browse Categories
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section id="categories" className="py-20 bg-gradient-to-b from-black to-gray-900" data-animate>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`text-center mb-16 transition-all duration-1000 ${visibleSections.has('categories') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`}>
-            <h2 className="text-4xl font-bold mb-4">Shop by Category</h2>
-            <p className="text-xl text-gray-400">Find your perfect otaku gear</p>
-          </div>
-          
-          <div className={`grid grid-cols-2 md:grid-cols-4 gap-6 transition-all duration-1000 ${visibleSections.has('categories') ? 'animate-stagger-in' : 'opacity-0'}`}>
-            {categories.slice(1).map((category) => {
-              const IconComponent = category.icon;
-              return (
-                <div key={category.id} className="group cursor-pointer animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }} onClick={() => {
-                  setActiveCategory(category.id);
-                  scrollToSection('products');
-                }}>
-                  <div className="bg-gradient-to-br from-blue-900/20 to-black/80 rounded-lg p-8 text-center transform transition-all duration-500 group-hover:scale-105 group-hover:bg-blue-600/20 border border-blue-600/20 group-hover:border-blue-400/40 group-hover:shadow-lg group-hover:shadow-blue-500/20 hover:-translate-y-2">
-                    <div className="bg-blue-600/10 rounded-full p-6 w-20 h-20 flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600/20 transition-all duration-300 group-hover:rotate-12">
-                      <IconComponent className="h-8 w-8 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-                    <h3 className="text-lg font-semibold group-hover:text-blue-400 transition-all duration-300 group-hover:scale-105">{category.name}</h3>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-gray-900" data-animate>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-1000 ${visibleSections.has('features') ? 'animate-stagger-in' : 'opacity-0'}`}>
-            <div className="text-center group animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <div className="bg-blue-600/10 rounded-full p-6 w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-600/20 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
-                <Truck className="h-8 w-8 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4 group-hover:text-blue-400 transition-colors duration-300">Free Shipping</h3>
-              <p className="text-gray-400">Free worldwide shipping on orders over $50</p>
-            </div>
-            <div className="text-center group animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <div className="bg-blue-600/10 rounded-full p-6 w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-600/20 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
-                <Shield className="h-8 w-8 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4 group-hover:text-blue-400 transition-colors duration-300">Premium Quality</h3>
-              <p className="text-gray-400">High-quality prints and materials for lasting wear</p>
-            </div>
-            <div className="text-center group animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <div className="bg-blue-600/10 rounded-full p-6 w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-600/20 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
-                <Star className="h-8 w-8 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4 group-hover:text-blue-400 transition-colors duration-300">Otaku Approved</h3>
-              <p className="text-gray-400">Designs by anime fans, for anime fans</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Limited Edition Section */}
-      <section id="limited" className="py-20 bg-gradient-to-b from-black to-red-900/20" data-animate>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`text-center mb-16 transition-all duration-1000 ${visibleSections.has('limited') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`}>
-            <div className="inline-flex items-center gap-2 bg-red-600/20 text-red-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              <div className="w-2 h-2 bg-red-400 rounded-full animate-ping"></div>
-              LIMITED TIME
-            </div>
-            <h2 className="text-4xl font-bold mb-4">
-              Exclusive <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent animate-gradient-x">Limited Editions</span>
-            </h2>
-            <p className="text-xl text-gray-400">Rare drops for true collectors - All artwork by <a href="https://www.instagram.com/garnet_arts._/" target="_blank" rel="noopener noreferrer" className="text-red-400 hover:text-red-300 underline">Garnet</a></p>
-          </div>
-
-          {/* Countdown Timer */}
-          <div className={`bg-gradient-to-r from-red-900/30 to-black/80 rounded-lg p-8 mb-12 border border-red-600/30 transition-all duration-1000 ${visibleSections.has('limited') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`} style={{ animationDelay: '0.2s' }}>
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-4 text-red-400">Next Drop Ends In:</h3>
-              <div className="flex justify-center gap-4 text-center">
-                <div className="bg-red-600/20 rounded-lg p-4 min-w-[80px] hover:scale-105 transition-transform duration-300 animate-pulse">
-                  <div className="text-3xl font-bold text-red-400">{timeLeft.days}</div>
-                  <div className="text-sm text-gray-400">Days</div>
-                </div>
-                <div className="bg-red-600/20 rounded-lg p-4 min-w-[80px] hover:scale-105 transition-transform duration-300 animate-pulse" style={{ animationDelay: '0.1s' }}>
-                  <div className="text-3xl font-bold text-red-400">{timeLeft.hours}</div>
-                  <div className="text-sm text-gray-400">Hours</div>
-                </div>
-                <div className="bg-red-600/20 rounded-lg p-4 min-w-[80px] hover:scale-105 transition-transform duration-300 animate-pulse" style={{ animationDelay: '0.2s' }}>
-                  <div className="text-3xl font-bold text-red-400">{timeLeft.minutes}</div>
-                  <div className="text-sm text-gray-400">Minutes</div>
-                </div>
-                <div className="bg-red-600/20 rounded-lg p-4 min-w-[80px] hover:scale-105 transition-transform duration-300 animate-pulse" style={{ animationDelay: '0.3s' }}>
-                  <div className="text-3xl font-bold text-red-400">{timeLeft.seconds}</div>
-                  <div className="text-sm text-gray-400">Seconds</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-1000 ${visibleSections.has('limited') ? 'animate-stagger-in' : 'opacity-0'}`}>
-            {[
-              { name: "Golden Saiyan Hoodie", price: "R800", stock: "3/50", anime: "Dragon Ball Z", rarity: "Ultra Rare" },
-              { name: "Akatsuki Cloud Tee", price: "R500", stock: "12/100", anime: "Naruto", rarity: "Rare" },
-              { name: "Titan Shift Poster", price: "R300", stock: "7/25", anime: "Attack on Titan", rarity: "Limited" },
-              { name: "Demon Slayer Mousepad", price: "R500", stock: "18/75", anime: "Demon Slayer", rarity: "Special" },
-              { name: "Studio Ghibli Hoodie", price: "R750", stock: "5/30", anime: "Studio Ghibli", rarity: "Collector" },
-              { name: "One Piece Treasure Tee", price: "R450", stock: "23/150", anime: "One Piece", rarity: "Limited" }
-            ].map((product, index) => (
-              <div key={index} className="group cursor-pointer animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="bg-black rounded-lg overflow-hidden shadow-2xl transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-red-500/20 border border-red-600/30 group-hover:border-red-400/50 relative hover:-translate-y-2">
-                  <div className="absolute top-4 right-4 z-10">
-                    <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
-                      {product.rarity}
-                    </span>
-                  </div>
-                  <div className="aspect-w-3 aspect-h-4 bg-gradient-to-br from-red-900/20 to-black/80 h-80 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="bg-red-600/10 rounded-full p-8 w-24 h-24 flex items-center justify-center mx-auto mb-4 group-hover:bg-red-600/20 transition-all duration-300 group-hover:rotate-12 group-hover:scale-110">
-                        <Star className="h-12 w-12 text-red-400 group-hover:scale-110 transition-transform duration-300" />
-                      </div>
-                      <p className="text-gray-400 text-sm">{product.anime}</p>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-2 group-hover:text-red-400 transition-all duration-300 group-hover:scale-105">{product.name}</h3>
-                    <div className="flex justify-between items-center mb-3">
-                      <p className="text-red-400 text-lg font-bold">{product.price}</p>
-                      <span className="text-xs bg-red-600/20 text-red-300 px-2 py-1 rounded-full">
-                        {product.stock} left
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-500 animate-pulse"
-                        style={{ width: `${(parseInt(product.stock.split('/')[0]) / parseInt(product.stock.split('/')[1])) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className={`text-center mt-12 transition-all duration-1000 ${visibleSections.has('limited') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`} style={{ animationDelay: '0.8s' }}>
-            <button 
-              onClick={() => setCurrentPage('limited')}
-              className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 flex items-center justify-center gap-2 mx-auto group"
-            >
-              View More Limited Editions <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Collaborations Section */}
-      <section id="collabs" className="py-20 bg-gradient-to-b from-red-900/20 to-purple-900/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-purple-600/20 text-purple-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              <Star className="w-4 h-4" />
-              EXCLUSIVE COLLABS
-            </div>
-            <h2 className="text-4xl font-bold mb-4">
-              Epic <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">Collaborations</span>
-            </h2>
-            <p className="text-xl text-gray-400">Official partnerships with top anime studios</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-            {[
-              {
-                partner: "Studio MAPPA",
-                collection: "Attack on Titan Final Season",
-                description: "Official merchandise celebrating the epic finale",
-                items: "15 exclusive designs",
-                status: "Available Now"
-              },
-              {
-                partner: "Toei Animation",
-                collection: "One Piece Film: Red",
-                description: "Limited edition items from the blockbuster movie",
-                items: "12 exclusive designs",
-                status: "Pre-Order"
-              }
-            ].map((collab, index) => (
-              <div key={index} className="bg-gradient-to-br from-purple-900/20 to-black/80 rounded-lg p-8 border border-purple-600/30 group hover:border-purple-400/50 transition-all duration-300">
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2 group-hover:text-purple-400 transition-colors duration-300">{collab.partner}</h3>
-                    <p className="text-purple-400 font-semibold">{collab.collection}</p>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    collab.status === 'Available Now' 
-                      ? 'bg-green-600/20 text-green-400' 
-                      : 'bg-yellow-600/20 text-yellow-400'
-                  }`}>
-                    {collab.status}
-                  </span>
-                </div>
-                <p className="text-gray-300 mb-4">{collab.description}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-400">{collab.items}</span>
-                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
-                    View Collection
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Featured Collab Products */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { name: "MAPPA x Lowkey Eren Hoodie", price: "R650", partner: "Studio MAPPA", type: "Official Collab" },
-              { name: "Toei x Lowkey Luffy Tee", price: "R420", partner: "Toei Animation", type: "Movie Exclusive" },
-              { name: "WIT Studio Levi Poster", price: "R260", partner: "WIT Studio", type: "Artist Series" }
-            ].map((product, index) => (
-              <div key={index} className="group cursor-pointer">
-                <div className="bg-black rounded-lg overflow-hidden shadow-2xl transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-purple-500/20 border border-purple-600/30 group-hover:border-purple-400/50 relative">
-                  <div className="absolute top-4 left-4 z-10">
-                    <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                      {product.type}
-                    </span>
-                  </div>
-                  <div className="aspect-w-3 aspect-h-4 bg-gradient-to-br from-purple-900/20 to-black/80 h-80 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="bg-purple-600/10 rounded-full p-8 w-24 h-24 flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-600/20 transition-colors duration-300">
-                        <Star className="h-12 w-12 text-purple-400" />
-                      </div>
-                      <p className="text-gray-400 text-sm">{product.partner}</p>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-lg font-semibold mb-2 group-hover:text-purple-400 transition-colors duration-300">{product.name}</h3>
-                    <div className="flex justify-between items-center">
-                      <p className="text-purple-400 text-lg font-bold">{product.price}</p>
-                      <span className="text-xs bg-purple-600/20 text-purple-300 px-2 py-1 rounded-full">
-                        Official
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="text-center mt-12">
-            <button 
-              onClick={() => setCurrentPage('collabs')}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
-            >
-              View More Collaborations <ArrowRight className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Products Section */}
-      <section id="products" className="py-20 bg-gradient-to-b from-gray-900 to-black" data-animate>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`text-center mb-16 transition-all duration-1000 ${visibleSections.has('products') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`}>
-            <h2 className="text-4xl font-bold mb-4">Featured Products</h2>
-            <p className="text-xl text-gray-400">Discover our most popular anime merchandise - All artwork by <a href="https://www.instagram.com/garnet_arts._/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Garnet</a></p>
-          </div>
-
-          {/* Category Filter */}
-          <div className={`flex flex-wrap justify-center gap-4 mb-12 transition-all duration-1000 ${visibleSections.has('products') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`} style={{ animationDelay: '0.2s' }}>
-            {categories.map((category) => {
-              const IconComponent = category.icon;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg animate-fade-in-up ${
-                    activeCategory === category.id
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                      : 'bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 hover:shadow-blue-500/20'
-                  }`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <IconComponent className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
-                  {category.name}
-                </button>
-              );
-            })}
-          </div>
-          
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-1000 ${visibleSections.has('products') ? 'animate-stagger-in' : 'opacity-0'}`}>
-            {filteredProducts.map((product, index) => {
-              const categoryIcon = categories.find(cat => cat.id === product.category)?.icon || Package;
-              const CategoryIcon = categoryIcon;
-              
-              return (
-                <div key={index} className="group cursor-pointer animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }} onClick={() => handleProductSelect(product)}>
-                  <div className="bg-black rounded-lg overflow-hidden shadow-2xl transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-blue-500/20 border border-blue-600/20 group-hover:border-blue-400/40 hover:-translate-y-2">
-                    <div className="aspect-w-3 aspect-h-4 bg-gradient-to-br from-blue-900/20 to-black/80 h-80 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="bg-blue-600/10 rounded-full p-8 w-24 h-24 flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600/20 transition-all duration-300 group-hover:rotate-12 group-hover:scale-110">
-                          <CategoryIcon className="h-12 w-12 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-                        </div>
-                        <p className="text-gray-400 text-sm">{product.anime}</p>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-400 transition-all duration-300 group-hover:scale-105">{product.name}</h3>
-                      <div className="flex justify-between items-center">
-                        <p className="text-blue-400 text-lg font-bold">{product.price}</p>
-                        <span className="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded-full capitalize">
-                          {product.category}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section id="about" className="py-20 bg-black" data-animate>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center transition-all duration-1000 ${visibleSections.has('about') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`}>
-            <div className="animate-fade-in-left">
-              <h2 className="text-4xl font-bold mb-6">About Lowkey! Otaku</h2>
-              <p className="text-lg text-gray-300 mb-6">
-                We're passionate anime fans creating premium merchandise for fellow otaku. From subtle designs for everyday wear to bold statements of your favorite series.
-              </p>
-              <p className="text-lg text-gray-300 mb-8">
-                Every design is carefully crafted by our talented artist <a href="https://www.instagram.com/garnet_arts._/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Garnet</a> with attention to detail, using high-quality materials that anime fans deserve. Whether you're looking for a cozy hoodie, a statement tee, or the perfect poster for your room, we've got you covered.
-              </p>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25">
-                Our Story
-              </button>
-            </div>
-            <div className="bg-gradient-to-br from-blue-900/20 to-black/80 rounded-lg p-12 text-center border border-blue-600/20 animate-fade-in-right hover:scale-105 transition-all duration-500 hover:shadow-lg hover:shadow-blue-500/20">
-              <div className="bg-blue-600/10 rounded-full p-12 w-48 h-48 flex items-center justify-center mx-auto hover:rotate-12 transition-transform duration-500">
-                <Star className="h-24 w-24 text-blue-400 animate-pulse" />
-              </div>
-              <h3 className="text-2xl font-bold mt-6 mb-4">Otaku Quality</h3>
-              <p className="text-gray-400">Made by fans, for fans with uncompromising quality</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter Section */}
-      <section className="py-20 bg-black" data-animate>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className={`text-4xl font-bold mb-6 transition-all duration-1000 ${visibleSections.has('newsletter') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`}>Stay Updated, Fellow Otaku</h2>
-          <p className={`text-xl text-blue-100 mb-8 transition-all duration-1000 ${visibleSections.has('newsletter') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`} style={{ animationDelay: '0.2s' }}>
-            Get notified about new releases, exclusive designs by Garnet, and special otaku deals
-          </p>
-          <div className={`flex flex-col sm:flex-row gap-4 max-w-md mx-auto transition-all duration-1000 ${visibleSections.has('newsletter') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`} style={{ animationDelay: '0.4s' }}>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-6 py-4 rounded-lg bg-gray-900 border border-blue-600/30 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 focus:scale-105"
-            />
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25">
-              Subscribe
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer id="contact" className="bg-black py-16" data-animate>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`grid grid-cols-1 md:grid-cols-4 gap-8 transition-all duration-1000 ${visibleSections.has('contact') ? 'animate-stagger-in' : 'opacity-0'}`}>
-            <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Lowkey! Otaku</h3>
-              <p className="text-gray-400 mb-4">Premium anime merchandise for the cultured otaku lifestyle. All artwork by <a href="https://www.instagram.com/garnet_arts._/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Garnet</a>.</p>
-              <div className="flex space-x-4">
-                <Instagram className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" />
-                <Twitter className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" />
-                <Facebook className="h-6 w-6 text-gray-400 hover:text-blue-400 cursor-pointer transition-all duration-300 hover:scale-110 hover:rotate-12" />
-              </div>
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <h4 className="text-lg font-semibold mb-4">Categories</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><button onClick={() => {setActiveCategory('tees'); scrollToSection('products');}} className="hover:text-blue-400 transition-all duration-300 hover:translate-x-2">Tees</button></li>
-                <li><button onClick={() => {setActiveCategory('hoodies'); scrollToSection('products');}} className="hover:text-blue-400 transition-all duration-300 hover:translate-x-2">Hoodies</button></li>
-                <li><button onClick={() => {setActiveCategory('posters'); scrollToSection('products');}} className="hover:text-blue-400 transition-all duration-300 hover:translate-x-2">Posters</button></li>
-                <li><button onClick={() => {setActiveCategory('mousepads'); scrollToSection('products');}} className="hover:text-blue-400 transition-all duration-300 hover:translate-x-2">Mousepads</button></li>
-              </ul>
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <h4 className="text-lg font-semibold mb-4">Customer Service</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-blue-400 transition-all duration-300 hover:translate-x-2">Shipping Info</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition-all duration-300 hover:translate-x-2">Returns</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition-all duration-300 hover:translate-x-2">Size Guide</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition-all duration-300 hover:translate-x-2">FAQ</a></li>
-              </ul>
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <h4 className="text-lg font-semibold mb-4">Contact Info</h4>
-              <div className="text-gray-400 space-y-2">
-                <p>123 Anime Street</p>
-                <p>Otaku City, OC 12345</p>
-                <p>Phone: (555) 123-OTAKU</p>
-                <p>Email: hello@lowkeyotaku.com</p>
-              </div>
-            </div>
-          </div>
-          <div className={`border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 transition-all duration-1000 ${visibleSections.has('contact') ? 'animate-fade-in-up' : 'opacity-0 translate-y-10'}`} style={{ animationDelay: '0.6s' }}>
-            <p>&copy; 2025 Lowkey! Otaku. All rights reserved. Made with ❤️ for anime fans. Artwork by <a href="https://www.instagram.com/garnet_arts._/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Garnet</a>.</p>
-          </div>
-        </div>
-      </footer>
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onProductSelect={setSelectedProduct}
+        products={products}
+      />
     </div>
   );
 }
