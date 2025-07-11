@@ -13,32 +13,32 @@ export default function CollaborationsPage({ onBack }: CollaborationsPageProps) 
 
   const collaborations = [
     {
-      partner: "Studio MAPPA",
-      collection: "Attack on Titan Final Season",
-      description: "Official merchandise celebrating the epic finale of humanity's greatest battle",
+      partner: "Craft Singh",
+      collection: "Premium Streetwear Collection",
+      description: "Exclusive collaboration featuring high-end streetwear designs with anime aesthetics",
       items: "15 exclusive designs",
       status: "Available Now",
       logo: Crown,
       products: [
-        { id: "c1", name: "MAPPA x Lowkey Eren Hoodie", price: "R550", anime: "Attack on Titan", type: "Official Collab", category: "hoodies", description: "Official collaboration with Studio MAPPA featuring Eren's final form. Premium heavyweight cotton with official licensing seal." },
-        { id: "c2", name: "Survey Corps Elite Tee", price: "R450", anime: "Attack on Titan", type: "Official Collab", category: "tees", description: "Elite Survey Corps design approved by MAPPA. Features the Wings of Freedom emblem with metallic thread embroidery." },
-        { id: "c3", name: "Founding Titan Poster", price: "R280", anime: "Attack on Titan", type: "Official Collab", category: "posters", description: "Official poster featuring the Founding Titan's colossal form. Signed by key animators from the final season." },
-        { id: "c4", name: "Wings of Freedom Mousepad", price: "R480", anime: "Attack on Titan", type: "Official Collab", category: "mousepads", description: "Official Survey Corps mousepad with anti-fray stitching. Features the regiment's motto in Japanese and English." },
-        { id: "c5", name: "Levi Squad Hoodie", price: "R650", anime: "Attack on Titan", type: "Official Collab", category: "hoodies", description: "Premium hoodie honoring Levi's Special Operations Squad. Includes individual member patches and squad insignia." }
+        { id: "c1", name: "Craft Singh x Lowkey Dragon Hoodie", price: "R750", anime: "Dragon Ball Z", type: "Designer Collab", category: "hoodies", description: "Exclusive designer collaboration featuring premium streetwear aesthetics with Dragon Ball Z elements. Limited edition with custom embroidery." },
+        { id: "c2", name: "Urban Saiyan Tee", price: "R550", anime: "Dragon Ball Z", type: "Designer Collab", category: "tees", description: "High-end streetwear tee with minimalist Saiyan design. Premium cotton blend with subtle metallic accents." },
+        { id: "c3", name: "Power Level Poster", price: "R380", anime: "Dragon Ball Z", type: "Designer Collab", category: "posters", description: "Designer poster featuring abstract power level visualization. Museum-quality print with holographic elements." },
+        { id: "c4", name: "Kamehameha Wave Mousepad", price: "R580", anime: "Dragon Ball Z", type: "Designer Collab", category: "mousepads", description: "Premium gaming mousepad with energy wave design. RGB-compatible edges and anti-slip base." },
+        { id: "c5", name: "Elite Warrior Hoodie", price: "R850", anime: "Dragon Ball Z", type: "Designer Collab", category: "hoodies", description: "Ultra-premium hoodie with hand-finished details. Features custom Craft Singh branding and anime-inspired graphics." }
       ]
     },
     {
-      partner: "Toei Animation",
-      collection: "One Piece Film: Red",
-      description: "Limited edition items from the blockbuster movie featuring Shanks and Uta",
+      partner: "Exactly Clothing",
+      collection: "Precision Anime Wear",
+      description: "Meticulously crafted anime apparel with attention to every detail and perfect fit",
       items: "12 exclusive designs",
       status: "Pre-Order",
       logo: Award,
       products: [
-        { id: "c6", name: "Toei x Lowkey Luffy Tee", price: "R420", anime: "One Piece", type: "Movie Exclusive", category: "tees", description: "Exclusive Film Red merchandise featuring Luffy's Gear 5 form. Only available through official Toei partnership." },
-        { id: "c7", name: "Shanks Red Hair Hoodie", price: "R680", anime: "One Piece", type: "Movie Exclusive", category: "hoodies", description: "Movie-exclusive hoodie featuring Red-Haired Shanks. Premium red fleece with embroidered Jolly Roger." },
-        { id: "c8", name: "Uta Concert Poster", price: "R270", anime: "One Piece", type: "Movie Exclusive", category: "posters", description: "Concert poster from Uta's performance in Film Red. Holographic finish with movie theater exclusive design." },
-        { id: "c9", name: "Straw Hat Pirates Mousepad", price: "R470", anime: "One Piece", type: "Movie Exclusive", category: "mousepads", description: "Film Red exclusive mousepad featuring the crew's movie outfits. Extended size perfect for gaming." }
+        { id: "c6", name: "Exactly x Lowkey Naruto Tee", price: "R520", anime: "Naruto", type: "Precision Fit", category: "tees", description: "Perfectly tailored tee with precise measurements and premium fabric. Features subtle Naruto-inspired design elements." },
+        { id: "c7", name: "Hokage Precision Hoodie", price: "R780", anime: "Naruto", type: "Precision Fit", category: "hoodies", description: "Meticulously crafted hoodie with perfect fit guarantee. Premium materials with Hokage-inspired design details." },
+        { id: "c8", name: "Village Hidden Poster", price: "R370", anime: "Naruto", type: "Precision Fit", category: "posters", description: "High-precision print featuring Hidden Leaf Village. Exact color matching and premium paper quality." },
+        { id: "c9", name: "Shinobi Precision Mousepad", price: "R570", anime: "Naruto", type: "Precision Fit", category: "mousepads", description: "Precisely engineered mousepad with optimal surface texture. Perfect dimensions for competitive gaming." }
       ]
     },
     {
